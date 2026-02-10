@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Firebase Login + .NET API</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 520px; margin: 40px auto; }
+    input { width: 100%; padding: 10px; margin: 6px 0; }
+    button { padding: 10px 14px; margin-right: 8px; cursor: pointer; }
+    pre { background: #f5f5f5; padding: 12px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Firebase Login</h1>
+
+  <label>Email</label>
+  <input id="email" type="email" placeholder="test@example.com" />
+
+  <label>Password</label>
+  <input id="password" type="password" placeholder="••••••••" />
+
+  <div>
+    <button id="signupBtn">Sign up</button>
+    <button id="loginBtn">Log in</button>
+    <button id="logoutBtn">Log out</button>
+  </div>
+
+  <h2>Status</h2>
+  <pre id="status">Not logged in</pre>
+
+  <h2>Call .NET Protected API</h2>
+  <button id="callApiBtn">Call /weather</button>
+  <pre id="apiResult">No call yet</pre>
+
+  <script type="module">
+    // ✅ We use Firebase v9+ (modular SDK)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+    // 🔥 Replace these with your Firebase project settings
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLLqMX5crnzXYIgvJJqeYk3-h-o9zkudQ",
+      authDomain: "fir-dotnetapi-f54a7.firebaseapp.com",
+      projectId: "fir-dotnetapi-f54a7"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const emailEl = document.getElementById("email");
+    const passEl = document.getElementById("password");
+    const statusEl = document.getElementById("status");
+    const apiResultEl = document.getElementById("apiResult");
+
+    // Updates UI whenever login state changes
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        statusEl.textContent = "Not logged in";
+        return;
+      }
+
+      // ✅ Firebase user exists. Get a fresh ID token (JWT)
+      const token = await user.getIdToken();
+
+      statusEl.textContent = JSON.stringify({
+        uid: user.uid,
+        email: user.email,
+        tokenPreview: token.substring(0, 25) + "..."
+      }, null, 2);
+    });
+
+    // Sign up (creates a user in Firebase Auth)
+    document.getElementById("signupBtn").addEventListener("click", async () => {
+      try {
+        await createUserWithEmailAndPassword(auth, emailEl.value, passEl.value);
+        alert("Signed up!");
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // Log in
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      try {
+        await signInWithEmailAndPassword(auth, emailEl.value, passEl.value);
+        alert("Logged in!");
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // Log out
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      alert("Logged out!");
+    });
+
+    // Call protected API
+    document.getElementById("callApiBtn").addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        apiResultEl.textContent = "You must log in first.";
+        return;
+      }
+
+      // ✅ ID token goes in Authorization header
+      const token = await user.getIdToken();
+
+      // .NET API URL
+      const apiUrl = "http://localhost:5165/weather";
+
+
+      try {
+        const res = await fetch(apiUrl, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        const text = await res.text();
+        apiResultEl.textContent = `Status: ${res.status}\n\n${text}`;
+      } catch (err) {
+        apiResultEl.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>
