@@ -34,7 +34,7 @@
   <pre id="apiResult">No call yet</pre>
 
   <script type="module">
-    // ✅ We use Firebase v9+ (modular SDK)
+    // Use Firebase v9+ (modular SDK)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
     import {
       getAuth,
@@ -44,7 +44,7 @@
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
-    // 🔥 Replace these with your Firebase project settings
+    // Firebase project settings
     const firebaseConfig = {
       apiKey: "AIzaSyCLLqMX5crnzXYIgvJJqeYk3-h-o9zkudQ",
       authDomain: "fir-dotnetapi-f54a7.firebaseapp.com",
@@ -67,7 +67,7 @@
         return;
       }
 
-      // ✅ Firebase user exists. Get a fresh ID token (JWT)
+      // Firebase user exists. Get a fresh ID token (JWT)
       const token = await user.getIdToken();
 
       statusEl.textContent = JSON.stringify({
@@ -111,7 +111,7 @@
         return;
       }
 
-      // ✅ ID token goes in Authorization header
+      // ID token goes in Authorization header
       const token = await user.getIdToken();
 
       // .NET API URL
